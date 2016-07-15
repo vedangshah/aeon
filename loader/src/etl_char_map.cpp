@@ -10,16 +10,9 @@ std::shared_ptr<char_map::decoded> char_map::extractor::extract(const char* in_a
 
     for (auto c: transcript)
     {
-        auto l = _cmap.find(c);
-        if (l != _cmap.end())
-        {
-            rc->_labels.push_back(l->second);
-        }
-        else
-        {
-            rc = nullptr;
-            break;
-        }
+        auto l = _cmap.find(std::toupper(c));
+        uint8_t v = (l != _cmap.end()) ? l->second : UINT8_MAX;
+        rc->_labels.push_back(v);
     }
     return rc;
 }

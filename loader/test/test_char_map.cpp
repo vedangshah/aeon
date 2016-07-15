@@ -28,24 +28,32 @@
 using namespace std;
 using namespace nervana;
 
+TEST(etl, bad_char_map) {
+    nlohmann::json js = {{"alphabet", "abcccc "},
+                         {"max_length", 15}};
+    EXPECT_THROW(char_map::config cfg{js}, std::runtime_error);
+
+}
+
 TEST(etl, char_map) {
     {
-        nlohmann::json js = {{"alphabet", "abcdefghijklmnopqrstuvwxyz "},
+        nlohmann::json js = {{"alphabet", "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()"},
                              {"max_length", 15}};
         char_map::config cfg{js};
         char_map::extractor extractor(cfg);
         auto data = cfg.get_cmap();
-        EXPECT_EQ(2,data['c']);
+        EXPECT_EQ(2, data['C']);
 
+        // handle mapping of unknown character
         {
-            // the character '.' is not in the map
-            string t1 = "the quick brown .fox jump over the lazy dog";
+            string t1 = "The quick brown -fox jump over the lazy dog";
             auto extracted = extractor.extract(&t1[0], t1.size());
-            EXPECT_EQ(nullptr, extracted);
+            EXPECT_EQ(UINT8_MAX, extracted->get_data()[16]);
         }
 
+
         {
-            string t1 = "the quick brown";
+            string t1 = "The quick brOwn";
             vector<int> expected = {19, 7, 4, 26, 16, 20, 8, 2, 10, 26, 1, 17, 14, 22, 13};
             auto decoded = extractor.extract(&t1[0], t1.size());
             ASSERT_NE(nullptr, decoded);

@@ -4,6 +4,7 @@
 #include <vector>
 #include <istream>
 #include <unordered_map>
+#include <cstdint>
 
 #include "etl_interface.hpp"
 
@@ -38,6 +39,7 @@ namespace nervana {
             {
                 _cmap.insert({c, index++});
             }
+            validate();
         }
 
         const std::unordered_map<char, uint8_t>& get_cmap() const {return _cmap;}
@@ -58,7 +60,7 @@ namespace nervana {
 
         bool unique_chars(std::string test_string)
         {
-            if (test_string.size() > sizeof(uint8_t))
+            if (test_string.size() > UINT8_MAX)
             {
                 return false;
             }
