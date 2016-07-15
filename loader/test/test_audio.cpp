@@ -44,6 +44,8 @@ TEST(DISABLED_etl, audio_extract) {
     ASSERT_EQ(decoded_audio->getSize(), 88704);
 }
 
+// This test is for comparing that a generated wav_data structure can write its data out to
+// 16-bit PCM that can be read via extractor (just via buffer rather than actually touching disk)
 TEST(etl, wav_compare) {
     sinewave_generator sg{400, 500};
     wav_data wav(sg, 2, 16000, false);
