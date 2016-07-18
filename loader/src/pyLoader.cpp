@@ -166,6 +166,9 @@ void pyDecodeThreadPool::produce()
         // At this point, we have decoded data for the whole minibatch.
         buffer_out_array& outBuf = _out->getForWrite();
 
+        // Do any messy cross datum stuff you may need to do that requires minibatch consistency
+        _providers[0]->post_process(outBuf);
+
         // Copy to device.
         _pbe->call_backend_transfer(outBuf, _bufferIndex);
 

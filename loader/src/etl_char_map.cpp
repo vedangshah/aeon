@@ -5,25 +5,25 @@ using namespace nervana;
 
 std::shared_ptr<char_map::decoded> char_map::extractor::extract(const char* in_array, int in_sz)
 {
-    auto rc = make_shared<char_map::decoded>();
-    string transcript(in_array, in_sz);
+    uint32_t nvalid = std::min((uint32_t) in_sz, _max_length);
+    string transcript(in_array, nvalid);
+    vector<uint8_t> char_ints((vector<uint8_t>::size_type) _max_length, (uint8_t) 0);
 
-    for (auto c: transcript)
+    for (uint i=0; i<nvalid; i++)
     {
-        auto l = _cmap.find(std::toupper(c));
+        auto l = _cmap.find(std::toupper(transcript[i]));
         uint8_t v = (l != _cmap.end()) ? l->second : UINT8_MAX;
-        rc->_labels.push_back(v);
+        char_ints[i] = v;
     }
+    auto rc = make_shared<char_map::decoded>(char_ints, nvalid);
     return rc;
 }
 
 
-void char_map::loader::load(char* out_array, std::shared_ptr<char_map::decoded> dc)
+void char_map::loader::load(char* out_ptr, std::shared_ptr<char_map::decoded> dc)
 {
-    memset(out_array, 0, _max_length * sizeof(uint8_t));
-    uint32_t copy_length = std::min(_max_length, (uint32_t) dc->get_data().size());
-    for (uint i=0; i<copy_length; i++)
+    for (auto c: dc->get_data())
     {
-        out_array[i] = dc->get_data()[i];
+        *(out_ptr++) = c;
     }
 }

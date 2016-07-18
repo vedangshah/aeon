@@ -37,7 +37,7 @@ namespace nervana {
             uint8_t index = 0;
             for (auto c: alphabet)
             {
-                _cmap.insert({c, index++});
+                _cmap.insert({std::toupper(c), index++});
             }
             validate();
         }
@@ -79,36 +79,38 @@ namespace nervana {
     };
 
     class char_map::decoded : public decoded_media {
-        friend class extractor;
-        friend class loader;
     public:
-        decoded() {}
+        decoded(std::vector<uint8_t> char_ints, uint32_t nvalid)
+        : _labels{char_ints}, _nvalid{nvalid}
+        {}
+
         virtual ~decoded() {}
 
         std::vector<uint8_t> get_data() const { return _labels; }
+        uint32_t get_length() const { return _nvalid; }
 
     private:
         std::vector<uint8_t>    _labels;
+        uint32_t                _nvalid;
     };
 
     class char_map::extractor : public interface::extractor<char_map::decoded> {
     public:
-        extractor( const char_map::config& cfg) : _cmap{cfg.get_cmap()} {}
-
+        extractor( const char_map::config& cfg)
+        : _cmap{cfg.get_cmap()}, _max_length{cfg.max_length}
+        {}
         virtual ~extractor(){}
         virtual std::shared_ptr<char_map::decoded> extract(const char*, int) override;
-
     private:
         const std::unordered_map<char, uint8_t>& _cmap;  // This comes from config
+        uint32_t  _max_length;
     };
 
     class char_map::loader : public interface::loader<char_map::decoded> {
     public:
-        loader( const char_map::config& cfg) : _max_length{cfg.max_length} {}
+        loader( const char_map::config& cfg) {}
         virtual ~loader(){}
-
         virtual void load(char*, std::shared_ptr<char_map::decoded>) override;
     private:
-        uint32_t  _max_length;
     };
 }

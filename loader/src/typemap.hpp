@@ -40,6 +40,19 @@ namespace nervana {
         int cv_type;
         size_t size;
     };
+
+    template<typename T> output_type make_otype() { throw std::runtime_error("Unknown type");}
+    template<> output_type make_otype<int8_t>() { return output_type("int8_t");}
+    template<> output_type make_otype<uint8_t>() { return output_type("uint8_t");}
+    template<> output_type make_otype<int16_t>() { return output_type("int16_t");}
+    template<> output_type make_otype<uint16_t>() { return output_type("uint16_t");}
+    template<> output_type make_otype<int32_t>() { return output_type("int32_t");}
+    template<> output_type make_otype<uint32_t>() { return output_type("uint32_t");}
+    template<> output_type make_otype<float>() { return output_type("float");}
+    template<> output_type make_otype<double>() { return output_type("double");}
+    template<> output_type make_otype<char>() { return output_type("char");}
+
+
 }
 
 

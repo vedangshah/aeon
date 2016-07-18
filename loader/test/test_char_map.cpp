@@ -38,7 +38,7 @@ TEST(etl, bad_char_map) {
 TEST(etl, char_map) {
     {
         nlohmann::json js = {{"alphabet", "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()"},
-                             {"max_length", 15}};
+                             {"max_length", 20}};
         char_map::config cfg{js};
         char_map::extractor extractor(cfg);
         auto data = cfg.get_cmap();
@@ -54,7 +54,8 @@ TEST(etl, char_map) {
 
         {
             string t1 = "The quick brOwn";
-            vector<int> expected = {19, 7, 4, 26, 16, 20, 8, 2, 10, 26, 1, 17, 14, 22, 13};
+            vector<int> expected = {19, 7, 4, 26, 16, 20, 8, 2, 10, 26, 1, 17, 14, 22, 13,
+                                    0, 0, 0, 0, 0};
             auto decoded = extractor.extract(&t1[0], t1.size());
             ASSERT_NE(nullptr, decoded);
             ASSERT_EQ(expected.size(),decoded->get_data().size());
@@ -72,7 +73,7 @@ TEST(etl, char_map) {
             auto decoded = extractor.extract(&t1[0], t1.size());
             loader.load(outbuf, decoded);
 
-            ASSERT_EQ(outbuf[max_length - 1], 19);
+            ASSERT_EQ(outbuf[max_length - 1], 5);
         }
 
         // Check zero padding
