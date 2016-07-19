@@ -22,16 +22,14 @@ TEST(provider,image) {
                          {"target_config", {{"type", "label"}, {"config", {}}}}};
 
     auto data_config = nervana::config_factory::create(js["data_config"]);
-    size_t dsize = data_config->get_size_bytes();
+    size_t dsize = data_config->get_shape_type().get_byte_size();
     size_t tsize = 4;
 
     auto media = nervana::train_provider_factory::create(js);
 
     size_t batch_size = 128;
 
-    buffer_out dbuffer(dsize,batch_size);
-    buffer_out tbuffer(tsize,batch_size);
-    buffer_out_array outBuf({&dbuffer,&tbuffer});
+    buffer_out_array outBuf({dsize, tsize}, batch_size);
 
     auto files = image_dataset.GetFiles();
     ASSERT_NE(0,files.size());
@@ -54,7 +52,7 @@ TEST(provider,image) {
 //        cv::imwrite(filename,mat);
     }
     for (int i=0; i<batch_size; i++ ) {
-        int target_value = unpack_le<int>(tbuffer.getItem(i));
+        int target_value = unpack_le<int>(outBuf[1]->getItem(i));
         EXPECT_EQ(42+i,target_value);
     }
 }

@@ -38,9 +38,7 @@ buffer_pool_in::buffer_pool_in(const std::vector<uint32_t>& initial_sizes)
 
 }
 
-buffer_pool_in::~buffer_pool_in() {
-
-}
+buffer_pool_in::~buffer_pool_in() {}
 
 buffer_in_array& buffer_pool_in::getForWrite()
 {

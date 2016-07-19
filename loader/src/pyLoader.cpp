@@ -280,54 +280,42 @@ int PyLoader::start()
         int itemsPerThread = (_batchSize - 1) /  ncores + 1;
         int nthreads       = (_batchSize - 1) / itemsPerThread + 1;
         nthreads           = std::min(nthreads, _batchSize);
-        std::vector<std::string> config_tags{"data_config", "target_config"};
 
-        for (auto& pcfg_tag : config_tags) {
-            if (_lcfg_json[pcfg_tag] == nullptr) {
-                throw std::runtime_error("missing PyLoader config parameter " + pcfg_tag);
-            }
-            try {
-                _provider_configs.push_back(
-                                    nervana::config_factory::create(_lcfg_json[pcfg_tag]));
-            } catch (const std::invalid_argument e) {
-                throw std::runtime_error( "exception while parsing " + pcfg_tag + " " + string(e.what()));
-            }
-        }
-
-        // Bind the python backend here
-        _pyBackend = make_shared<pyBackendWrapper>(_pbe, _provider_configs, _batchSize);
-
-        // Start the read buffers off with a reasonable size. They will get resized as needed.
-        vector<uint32_t> read_sizes_initial {_provider_configs[0]->get_size_bytes() * _batchSize / 8,
-                                             _provider_configs[1]->get_size_bytes() * _batchSize};
-
-        _readBufs = make_shared<buffer_pool_in>(read_sizes_initial);
-
-        _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
-
-        _decodeBufs = make_shared<buffer_pool_out>(
-                                            (size_t)_provider_configs[0]->get_size_bytes(),
-                                            (size_t)_provider_configs[1]->get_size_bytes(),
-                                            (size_t)_batchSize,
-                                            _pyBackend->use_pinned_memory());
-
-        _decodeThreads = unique_ptr<pyDecodeThreadPool>(
-                            new pyDecodeThreadPool(nthreads, _readBufs, _decodeBufs, _pyBackend));
-
-        // Now add providers
+        vector<shared_ptr<nervana::provider_interface>> providers;
         for (int i=0; i<nthreads; i++) {
-            std::shared_ptr<nervana::provider_interface> factory;
             try {
-                factory = nervana::train_provider_factory::create(_lcfg_json);
+                providers.push_back(nervana::train_provider_factory::create(_lcfg_json));
             } catch (const std::invalid_argument e) {
                 stringstream ss;
                 ss << "exception while parsing provider_factory: ";
                 ss << e.what();
                 throw std::runtime_error(ss.str());
             }
-
-            _decodeThreads->add_provider(factory);
         }
+
+        const vector<nervana::shape_type>& oshapes = providers[0]->get_oshapes();
+        vector<size_t> write_sizes;
+        for (auto& o: oshapes)
+        {
+            write_sizes.push_back(o.get_byte_size());
+        }
+
+        // Bind the python backend here
+        _pyBackend = make_shared<pyBackendWrapper>(_pbe, oshapes, _batchSize);
+
+        // Start the read buffers off with zero-sized buffers, they will get resized
+        vector<uint32_t> read_sizes_initial (providers[0]->num_inputs, 0);
+        _readBufs = make_shared<buffer_pool_in>(read_sizes_initial);
+        _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
+
+
+        // These are fixed size output buffers (need batchSize for stride)
+        _decodeBufs = make_shared<buffer_pool_out>(write_sizes,
+                                                   (size_t)_batchSize,
+                                                   _pyBackend->use_pinned_memory());
+
+        _decodeThreads = unique_ptr<pyDecodeThreadPool>(
+                            new pyDecodeThreadPool(nthreads, _readBufs, _decodeBufs, _pyBackend));
 
     } catch(std::bad_alloc&) {
         return -1;
@@ -378,25 +366,11 @@ PyObject* PyLoader::next(int bufIdx)
     while (_decodeBufs->empty()) {
         _decodeBufs->waitForNonEmpty(lock);
     }
-    return _pyBackend->get_dtm_tgt_pair(bufIdx);
-}
-
-PyObject* PyLoader::pyConfigShape(std::shared_ptr<nervana::interface::config> config) {
-    // get the shape of a config and convert it into a python list
-    auto shape = config->get_shape();
-    PyObject* ret = PyTuple_New(shape.size());
-    for(uint i = 0; i < shape.size(); ++i) {
-        PyTuple_SetItem(ret, i, Py_BuildValue("i", shape[i]));
-    }
-    return ret;
+    return _pyBackend->get_host_tuple(bufIdx);
 }
 
 PyObject* PyLoader::shapes() {
-    PyObject* ret = PyTuple_New(_provider_configs.size());
-    for (uint i=0; i < _provider_configs.size(); ++i) {
-        PyTuple_SetItem(ret, i, pyConfigShape(_provider_configs[i]));
-    }
-    return ret;
+    return _pyBackend->get_shapes();
 }
 
 void PyLoader::drain()

@@ -41,18 +41,24 @@ namespace nervana {
         size_t size;
     };
 
-    template<typename T> output_type make_otype() { throw std::runtime_error("Unknown type");}
-    template<> output_type make_otype<int8_t>() { return output_type("int8_t");}
-    template<> output_type make_otype<uint8_t>() { return output_type("uint8_t");}
-    template<> output_type make_otype<int16_t>() { return output_type("int16_t");}
-    template<> output_type make_otype<uint16_t>() { return output_type("uint16_t");}
-    template<> output_type make_otype<int32_t>() { return output_type("int32_t");}
-    template<> output_type make_otype<uint32_t>() { return output_type("uint32_t");}
-    template<> output_type make_otype<float>() { return output_type("float");}
-    template<> output_type make_otype<double>() { return output_type("double");}
-    template<> output_type make_otype<char>() { return output_type("char");}
+    class shape_type {
+    public:
+        shape_type(std::vector<uint32_t> shape, output_type otype)
+        : _shape{shape}, _otype{otype}
+        {
+            _byte_size = static_cast<size_t> (_otype.size *
+                std::accumulate(_shape.begin(), _shape.end(), 1, std::multiplies<uint32_t>()));
+        }
 
+        size_t get_byte_size() const { return _byte_size; }
+        const std::vector<uint32_t>& get_shape() const { return _shape; }
+        const output_type& get_otype() const { return _otype; }
 
+    private:
+        std::vector<uint32_t> _shape;
+        output_type           _otype;
+        size_t                _byte_size;
+    };
 }
 
 

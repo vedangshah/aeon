@@ -25,7 +25,7 @@
 
 class buffer_pool_out {
 public:
-    buffer_pool_out(size_t dataSize, size_t targetSize, size_t batchSize, bool pinned = false);
+    buffer_pool_out(const std::vector<size_t>& writeSizes, size_t batchSize, bool pinned = false);
     virtual ~buffer_pool_out();
     buffer_out_array& getForWrite();
     buffer_out_array& getForRead();
@@ -46,11 +46,12 @@ protected:
     void advance(int& index);
 
 protected:
-    int                         _count;
-    int                         _used;
-    std::vector<buffer_out_array> _bufs;
-    int                         _readPos;
-    int                         _writePos;
+    static constexpr int        _count = 2;
+    int                         _used = 0;
+    std::vector<std::shared_ptr<buffer_out_array>> _bufs;
+    int                         _readPos = 0;
+    int                         _writePos = 0;
+
     std::mutex                  _mutex;
     std::condition_variable     _nonFull;
     std::condition_variable     _nonEmpty;

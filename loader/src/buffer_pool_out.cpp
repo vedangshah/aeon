@@ -30,36 +30,30 @@
 
 using namespace std;
 
-buffer_pool_out::buffer_pool_out(size_t dataSize, size_t targetSize, size_t batchSize, bool pinned)
-: _count(2), _used(0), _readPos(0), _writePos(0) {
+buffer_pool_out::buffer_pool_out(const std::vector<size_t>& writeSizes,
+                                 size_t batchSize, bool pinned)
+{
     for (int i = 0; i < _count; i++) {
-        buffer_out* dataBuffer   = new buffer_out(dataSize, batchSize, pinned);
-        buffer_out* targetBuffer = new buffer_out(targetSize, batchSize, pinned);
-        _bufs.push_back(buffer_out_array{dataBuffer, targetBuffer});
+        _bufs.push_back(make_shared<buffer_out_array>(writeSizes, batchSize, pinned));
     }
+
 }
 
 buffer_pool_out::~buffer_pool_out() {
-    for (auto buf : _bufs) {
-        delete buf[0];
-        delete buf[1];
-    }
 }
 
 buffer_out_array& buffer_pool_out::getForWrite()
 {
-//    _bufs[_writePos][0]->reset();
-//    _bufs[_writePos][1]->reset();
-    return _bufs[_writePos];
+    return *_bufs[_writePos];
 }
 
 buffer_out_array& buffer_pool_out::getForRead() {
-    return _bufs[_readPos];
+    return *_bufs[_readPos];
 }
 
 buffer_out_array& buffer_pool_out::getPair(int bufIdx) {
     assert(bufIdx >= 0 && bufIdx < _count);
-    return _bufs[bufIdx];
+    return *_bufs[bufIdx];
 }
 
 void buffer_pool_out::advanceReadPos() {
