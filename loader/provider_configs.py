@@ -32,3 +32,18 @@ def make_miniplaces_config(manifest_dir="/scratch/alex/places2mini", minibatch_s
                     minibatch_size=minibatch_size)
 
     return json.dumps(cfg_dict)
+
+def make_cstr_config(manifest_dir="/mnt/data/tyler/raw/VCTK-Corpus",
+                     minibatch_size=128):
+    dcfg = dict(type="audio", config=dict(sampling_freq=22050, clip_duration=31000, frame_duration=20))
+    tcfg = dict(type="transcript", config=dict())
+
+    cfg_dict = dict(media="audio_transcript",
+                    data_config=dcfg,
+                    target_config=tcfg,
+                    manifest_filename=os.path.join(manifest_dir,
+                                                   "vctk_manifest.csv"),
+                    macrobatch_size=minibatch_size,
+                    minibatch_size=minibatch_size)
+
+    return cfg_dict
