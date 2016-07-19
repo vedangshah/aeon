@@ -293,6 +293,17 @@ int PyLoader::start()
             }
         }
 
+        // variable size buffers for reading encoded data (start off zero and grow as needed)
+        const uint32_t nbuffers_in = providers[0]->num_inputs;
+        vector<size_t> read_sizes;
+        for (uint i=0; i<nbuffers_in; i++)
+        {
+            read_sizes.push_back(0);
+        }
+        _readBufs = make_shared<buffer_pool_in>(read_sizes);
+        _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
+
+        // fixed size buffers for writing out decoded data
         const vector<nervana::shape_type>& oshapes = providers[0]->get_oshapes();
         vector<size_t> write_sizes;
         for (auto& o: oshapes)
@@ -303,19 +314,15 @@ int PyLoader::start()
         // Bind the python backend here
         _pyBackend = make_shared<pyBackendWrapper>(_pbe, oshapes, _batchSize);
 
-        // Start the read buffers off with zero-sized buffers, they will get resized
-        vector<uint32_t> read_sizes_initial (providers[0]->num_inputs, 0);
-        _readBufs = make_shared<buffer_pool_in>(read_sizes_initial);
-        _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
-
-
         // These are fixed size output buffers (need batchSize for stride)
-        _decodeBufs = make_shared<buffer_pool_out>(write_sizes,
-                                                   (size_t)_batchSize,
+        _decodeBufs = make_shared<buffer_pool_out>(write_sizes, (size_t)_batchSize,
                                                    _pyBackend->use_pinned_memory());
-
         _decodeThreads = unique_ptr<pyDecodeThreadPool>(
                             new pyDecodeThreadPool(nthreads, _readBufs, _decodeBufs, _pyBackend));
+        for (auto& p: providers)
+        {
+            _decodeThreads->add_provider(p);
+        }
 
     } catch(std::bad_alloc&) {
         return -1;

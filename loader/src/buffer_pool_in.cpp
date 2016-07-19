@@ -30,7 +30,7 @@
 
 using namespace std;
 
-buffer_pool_in::buffer_pool_in(const std::vector<uint32_t>& initial_sizes)
+buffer_pool_in::buffer_pool_in(const std::vector<size_t>& initial_sizes)
 {
     for (int i = 0; i < _count; i++) {
         _bufs.push_back(make_shared<buffer_in_array>(initial_sizes));
