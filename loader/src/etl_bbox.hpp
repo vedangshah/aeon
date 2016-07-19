@@ -52,9 +52,7 @@ public:
     bool extract(const char* data, int size, const std::unordered_map<std::string,int>& label_map);
     virtual ~decoded() {}
 
-    MediaType get_type() override { return MediaType::TARGET; }
-
-    std::vector<box> boxes() const { return _boxes; }
+    const std::vector<box>& boxes() const { return _boxes; }
     int width() const { return _width; }
     int height() const { return _height; }
     int depth() const { return _depth; }
@@ -94,4 +92,7 @@ public:
     loader(const bbox::config&);
     virtual ~loader(){}
     virtual void load(char*, std::shared_ptr<bbox::decoded>) override;
+
+private:
+    const size_t max_bbox;
 };
