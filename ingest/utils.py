@@ -1,5 +1,6 @@
 import os
 import fnmatch
+import subprocess
 
 def write_manifest(output_file, *filenames):
     """ Writes out a manifest file from a series of lists of filenames
@@ -36,10 +37,10 @@ def convert_audio(input_file, output_file, bit_depth=16,
     """
 
     r = subprocess.check_call(["sox",
-                               mp3_file,
-                               "-r", sample_frequency,
-                               "-b", bit_depth,
+                               input_file,
+                               "-r", str(sample_frequency),
+                               "-b", str(bit_depth),
                                "-e", encoding_type,
-                               wav_file])
+                               output_file])
 
     return r == 0

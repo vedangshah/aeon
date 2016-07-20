@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 import os
-import subprocess
+import logging
 from ingest.utils import write_manifest, get_files, convert_audio
+
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def get_all_transcripts(sentence_csv_file):
@@ -42,17 +47,25 @@ def main(input_directory, sentence_details_file,
     # Get a dictionary of all of the transcripts for quick reference. This takes a bit of time but speeds things up considerably
     transcripts = get_all_transcripts(sentence_details_file)
     mp3_files = get_files(input_directory, "*.mp3")
+    if len(mp3_files) == 0:
+        logger.error("No .mp3 files were found in {}".format(input_directory))
+        return
 
+    logger.info("Beginning audio conversions")
     wav_files = list()
     txt_files = list()
-    for mp3_file in mp3_files:
+    for ii, mp3_file in enumerate(mp3_files):
+        if ii % int(len(mp3_files) / 10) == 0:
+            logger.info("Converting audio for file {} of {}".format(ii,
+                                                                len(mp3_files)))
+
         fname = os.path.splitext(os.path.basename(mp3_file))[0]
 
         # Get the transcript, if it exists
         try:
             tscript = transcripts[fname]
         except KeyError:
-            print("Could not find transcript for {}".format(mp3_file))
+            logger.warn("Could not find transcript for {}".format(mp3_file))
             continue
 
         wav_file = os.path.join(output_directory, "{}.wav".format(fname))
@@ -61,7 +74,7 @@ def main(input_directory, sentence_details_file,
         # Convert mp3 to 16k wav
         success = convert_audio(mp3_file, wav_file)
         if success is False:
-            print("Audio conversion failed for {}".format(mp3_file))
+            logger.warn("Audio conversion failed for {}".format(mp3_file))
             continue
 
         # Write out short transcript file
@@ -72,6 +85,7 @@ def main(input_directory, sentence_details_file,
         wav_files.append(wav_file)
         txt_files.append(txt_file)
 
+    logger.info("Writing manifest file to {}".format(manifest_file))
     return write_manifest(manifest_file, wav_files, txt_files)
 
 

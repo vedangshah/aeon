@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 import os
+import logging
 from ingest.utils import get_files, write_manifest, convert_audio
+
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def main(input_directory, output_directory, transcript_directory,
@@ -25,11 +31,17 @@ def main(input_directory, output_directory, transcript_directory,
         os.makedirs(output_directory)
 
     transcript_files = get_files(input_directory, pattern="*.txt")
+    if len(filenames) == 0:
+        logger.error("No .txt files were found in {}".format(input_directory))
+        return
 
+    logger.info("Beginning audio conversions")
     wav_files = list()
     text_files = list()
-    for tfile in transcript_files:
+    for ii, tfile in enumerate(transcript_files):
         # transcript file specifies transcript and flac filename for all librispeech files
+        logger.info("Converting audio corresponding to transcript "
+                    "{} of {}".format(ii, len(transcript_files)))
         with open(tfile, "r") as fid:
             lines = fid.readlines()
 
@@ -43,7 +55,7 @@ def main(input_directory, output_directory, transcript_directory,
             # Convert flac to 16k wav
             success = convert_audio(flac_file, wav_file)
             if success is False:
-                print("Audio conversion failed for {}".format(fname))
+                logger.warn("Audio conversion failed for {}".format(fname))
                 continue
 
             # Write out short transcript file
@@ -54,6 +66,7 @@ def main(input_directory, output_directory, transcript_directory,
             wav_files.append(wav_file)
             txt_files.append(txt_file)
 
+    logger.info("Writing manifest file to {}".format(manifest_file))
     return write_manifest(manifest_file, wav_files, txt_files)
 
 
