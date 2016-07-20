@@ -27,3 +27,19 @@ def get_files(directory, pattern, recursive=True):
             break
 
     return matches
+
+
+def convert_audio(input_file, output_file, bit_depth=16,
+                  encoding_type="signed", sample_frequency=16000):
+    """ Converts an input audio file to output audio file using the sox command
+    line utility.
+    """
+
+    r = subprocess.check_call(["sox",
+                               mp3_file,
+                               "-r", sample_frequency,
+                               "-b", bit_depth,
+                               "-e", encoding_type,
+                               wav_file])
+
+    return r == 0
