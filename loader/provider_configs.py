@@ -33,12 +33,18 @@ def make_miniplaces_config(manifest_dir="/scratch/alex/places2mini", minibatch_s
 
     return json.dumps(cfg_dict)
 
+
 def make_cstr_config(manifest_dir="/mnt/data/tyler/raw/VCTK-Corpus",
                      minibatch_size=128):
-    dcfg = dict(type="audio", config=dict(sampling_freq=22050, clip_duration=31000, frame_duration=20))
-    tcfg = dict(type="transcript", config=dict())
+    dcfg = dict(type="audio", config=dict(max_duration="2000 milliseconds",
+                                          frame_stride="256 samples",
+                                          frame_length="1024 samples",
+                                          feature_type="mfcc",
+                                          sample_freq_hz=48000,
+                                          num_filts=64))
+    tcfg = dict(type="label", config=dict())
 
-    cfg_dict = dict(media="audio_transcript",
+    cfg_dict = dict(media="audio_label",
                     data_config=dcfg,
                     target_config=tcfg,
                     manifest_filename=os.path.join(manifest_dir,
