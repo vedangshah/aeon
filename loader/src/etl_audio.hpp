@@ -252,4 +252,16 @@ namespace nervana {
         cv::Mat                        _window     {};
         cv::Mat                        _filterbank {};
     };
+
+    class audio::loader : public interface::loader<audio::decoded> {
+    public:
+        loader(const audio::config& cfg) : _cfg{cfg} {}
+        ~loader() {}
+        virtual void load(char*, std::shared_ptr<audio::decoded>) override;
+
+    private:
+        const audio::config& _cfg;
+        void split(cv::Mat&, char*);
+    };
+
 }

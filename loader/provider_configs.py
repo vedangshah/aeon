@@ -36,15 +36,42 @@ def make_miniplaces_config(manifest_dir="/scratch/alex/places2mini", minibatch_s
 
 def make_cstr_config(manifest_dir="/mnt/data/tyler/raw/VCTK-Corpus",
                      minibatch_size=128):
+    """
+    This is an example config for the CSTR speech dataset.
+    audio configuration should have type="audio", and config should be a dictionary with keys:
+    - max_duration (required)
+    - frame_stride (required)
+    - frame_length (required)
+    - sample_freq_hz
+    - num_cepstra
+    - num_filters
+    - window_type
+    - feature_type
+    - seed
+    - type_string
+    - distribution (with keys of following)
+        - time_scale_fraction
+        - add_noise
+        - noise_index
+        - noise_level
+        - noise_offset_fraction
+
+    transcription configuration should have type="transcript", and config should be a dictionary with keys:
+    - max_length (required)
+    - alphabet (required)
+    - type_string
+    """
     dcfg = dict(type="audio", config=dict(max_duration="2000 milliseconds",
                                           frame_stride="256 samples",
                                           frame_length="1024 samples",
                                           feature_type="mfcc",
                                           sample_freq_hz=48000,
                                           num_filts=64))
-    tcfg = dict(type="label", config=dict())
+    tcfg = dict(type="transcript",
+                config=dict(max_length=100,
+                            alphabet="_'ABCDEFGHIJKLMNOPQRSTUVWXYZ $"))
 
-    cfg_dict = dict(media="audio_label",
+    cfg_dict = dict(media="transcribed_audio",
                     data_config=dcfg,
                     target_config=tcfg,
                     manifest_filename=os.path.join(manifest_dir,

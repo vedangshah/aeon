@@ -10,9 +10,11 @@ std::shared_ptr<nervana::provider_interface> nervana::train_provider_factory::cr
     if( mediaType == "image_label" ) {
         rc = std::make_shared<nervana::image_decoder>(configJs);
     } else if( mediaType == "localization" ) {
-    } else {
+    } else if( mediaType == "transcribed_audio"){
+        rc = std::make_shared<nervana::transcribed_audio>(configJs);
+    } else{
         rc = nullptr;
-        throw std::runtime_error("WTF??");
+        throw std::runtime_error("media value is not currently supported");
     }
     return rc;
 }
@@ -29,8 +31,13 @@ std::shared_ptr<nervana::interface::config> nervana::config_factory::create(nloh
         rc = std::make_shared<nervana::image::config>(configJs["config"]);
     } else if ( mediaType == "label" ) {
         rc = std::make_shared<nervana::label::config>(configJs["config"]);
+    } else if ( mediaType == "audio") {
+        rc = std::make_shared<nervana::audio::config>(configJs["config"]);
+    } else if (mediaType == "transcript") {
+        rc = std::make_shared<nervana::char_map::config>(configJs["config"]);
     } else {
         rc = nullptr;
+        throw std::runtime_error("property 'type' is not currently supported")
     }
     if (rc != nullptr) {
         if(!configJs["config"].is_object()) {

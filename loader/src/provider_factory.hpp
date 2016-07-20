@@ -2,6 +2,7 @@
 #include <memory>
 #include "provider_interface.hpp"
 #include "provider_image_class.hpp"
+#include "provider_audio.hpp"
 
 namespace nervana {
     class train_provider_factory;
