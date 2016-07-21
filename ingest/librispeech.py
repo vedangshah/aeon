@@ -30,14 +30,17 @@ def main(input_directory, output_directory, transcript_directory,
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
+    if not os.path.exists(transcript_directory):
+        os.makedirs(transcript_directory)
+
     transcript_files = get_files(input_directory, pattern="*.txt")
-    if len(filenames) == 0:
+    if len(transcript_files) == 0:
         logger.error("No .txt files were found in {}".format(input_directory))
         return
 
     logger.info("Beginning audio conversions")
     wav_files = list()
-    text_files = list()
+    txt_files = list()
     for ii, tfile in enumerate(transcript_files):
         # transcript file specifies transcript and flac filename for all librispeech files
         logger.info("Converting audio corresponding to transcript "
@@ -60,7 +63,7 @@ def main(input_directory, output_directory, transcript_directory,
 
             # Write out short transcript file
             with open(txt_file, "w") as fid:
-                fid.write(tscript)
+                fid.write(transcript)
 
             # Add to output lists to be written to manifest
             wav_files.append(wav_file)
