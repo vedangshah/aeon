@@ -46,18 +46,14 @@ def main(input_directory, sentence_details_file,
 
     # Get a dictionary of all of the transcripts for quick reference. This takes a bit of time but speeds things up considerably
     transcripts = get_all_transcripts(sentence_details_file)
-    mp3_files = get_files(input_directory, "*.mp3")
-    if len(mp3_files) == 0:
-        logger.error("No .mp3 files were found in {}".format(input_directory))
-        return
+    mp3_files = get_files(input_directory, "*.mp3", recursive=False)
 
     logger.info("Beginning audio conversions")
     wav_files = list()
     txt_files = list()
     for ii, mp3_file in enumerate(mp3_files):
-        if ii % int(len(mp3_files) / 10) == 0:
-            logger.info("Converting audio for file {} of {}".format(ii,
-                                                                len(mp3_files)))
+        if (ii % 100) == 0:
+            logger.info("Converting audio for file {}".format(ii))
 
         fname = os.path.splitext(os.path.basename(mp3_file))[0]
 
