@@ -14,6 +14,7 @@
 */
 
 #include <fstream>
+#include <sox.h>
 #include "gtest/gtest.h"
 
 #include "etl_audio.hpp"
@@ -53,6 +54,54 @@ TEST(etl, wav_compare) {
     }
 
     ASSERT_EQ(all_eq, true);
+}
+
+TEST(etl, sox_use) {
+
+    sinewave_generator sg{400, 500};
+    wav_data wav(sg, 2, 16000, false);
+
+    uint32_t wav_bufsize = wav_data::HEADER_SIZE + wav.nbytes();
+    char *wav_buf = new char[wav_bufsize];
+
+    wav.write_to_buffer(wav_buf, wav_bufsize);
+
+    // sox_init();
+    sox_format_t* in = sox_open_mem_read(wav_buf, wav_bufsize, NULL, NULL, NULL);
+
+    ASSERT_EQ(in->signal.rate, 16000);
+    ASSERT_EQ(in->signal.channels, 1);
+    ASSERT_EQ(in->signal.length, 16000 * 2 * 1);
+    ASSERT_EQ(in->signal.precision, 16);
+
+    sox_sample_t* sample_buffer = new sox_sample_t[in->signal.length];
+    size_t number_read = sox_read(in, sample_buffer, in->signal.length);
+
+    ASSERT_EQ(in->signal.length, number_read);
+    for (uint i=0; i<60; ++i) {
+        sox_sample_t x = wav.get_data().at<int16_t>(i, 0) << 16;
+        ASSERT_EQ(x, sample_buffer[i]);
+    }
+
+    // out= (sox_format_t *) malloc(sizeof (sox_format_t));
+    // memcpy(out, in, sizeof (sox_format_t));
+    // out->encoding.encoding = SOX_ENCODING_ULAW;
+    // out->encoding.bits_per_sample=8;
+    // out->signal.rate = 8000;
+    // out->signal.precision = 8;
+    // out->signal.length = SOX_UNSPEC;
+
+    // assert(out = sox_open_write(argv[2], &out->signal, &out->encoding, NULL, NULL, NULL));
+    // if (in->signal.rate != out->signal.rate) {
+    //     e = sox_create_effect(sox_find_effect("rate"));
+    //     assert(sox_effect_options(e, 0, NULL) == SOX_SUCCESS);
+    //     e->handler.flags |= SOX_EFF_LENGTH;
+    //     assert(sox_add_effect(chain, e, &in->signal, &out->signal) == SOX_SUCCESS);
+    //     free(e);
+    // }
+
+    delete [] sample_buffer;
+
 }
 
 TEST(etl, specgram) {

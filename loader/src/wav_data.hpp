@@ -120,4 +120,33 @@ namespace nervana {
         cv::Mat       data;
         int32_t       _sample_rate;
     };
+
+
+    class generic_audio {
+    public:
+        generic_audio(const char *buf, uint32_t bufsize);
+
+        void dump(std::ostream & ostr = std::cout);
+        void write_to_buffer(char *buf, uint32_t bufsize);
+
+        cv::Mat& get_data() { return data; }
+        char **get_raw_data() { return (char **) &(data.data);}
+
+        uint32_t nbytes() { return data.total() * data.elemSize(); }
+        uint32_t nsamples() { return data.rows; }
+        int32_t sample_rate() { return _in_fmt == NULL ? 0 : _in_fmt->signal.rate; }
+
+    private:
+        void wav_assert(bool cond, const std::string &msg)
+        {
+            if (!cond)
+            {
+                throw wavefile_exception(msg);
+            }
+        }
+
+        cv::Mat       data;
+        sox_format_t* _in_fmt;
+    };
+
 }
