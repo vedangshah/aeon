@@ -47,7 +47,7 @@ audio_transcriber::audio_transcriber(nlohmann::json js) :
     shape_type trans_length({1, 1}, output_type("uint32_t"));
     oshapes.push_back(trans_length);
 
-    shape_type valid_pct({1, 1}, output_type("uint32_t"));
+    shape_type valid_pct({1, 1}, output_type("float"));
     oshapes.push_back(valid_pct);
 }
 
@@ -82,7 +82,10 @@ void audio_transcriber::provide(int idx, buffer_in_array& in_buf, buffer_out_arr
     // Get the length of each audio record as a percentage of
     // maximum utterance length
     float valid_pct = 100 * (float)audio_dec->valid_frames / (float)audio_config.time_steps;
-    pack_le(valid_out, static_cast<uint32_t>(valid_pct));
+
+    // Since valid_pct is a float, we need to trick the compiler into
+    // interpreting it as an int. It will still be read into python as a float.
+    pack_le(valid_out, *(int*)&valid_pct);
 }
 
 void audio_transcriber::post_process(buffer_out_array& out_buf)
