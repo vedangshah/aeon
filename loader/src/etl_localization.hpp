@@ -76,7 +76,7 @@ namespace nervana {
         std::vector<box> add_anchors();
 
         const localization::config& cfg;
-        int conv_size;
+        int                         conv_size;
 
         std::vector<box> all_anchors;
     };
@@ -148,11 +148,8 @@ namespace nervana {
         std::vector<target> bbox_targets;
         std::vector<int>    anchor_index;
         std::vector<box>    anchors;
-
-        float image_scale;
-        cv::Size image_size;
-
-    private:
+        float               image_scale;
+        cv::Size            output_image_size;
     };
 
     class localization::extractor : public nervana::interface::extractor<localization::decoded> {
@@ -189,8 +186,8 @@ namespace nervana {
         std::vector<int> sample_anchors(const std::vector<int>& labels, bool debug=false);
 
         const localization::config& cfg;
-        std::minstd_rand0 random;
-        anchor  _anchor;
+        std::minstd_rand0           random;
+        anchor                      _anchor;
     };
 
     class localization::loader : public interface::loader<localization::decoded> {

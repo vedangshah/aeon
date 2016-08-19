@@ -175,7 +175,7 @@ void plot(const string& path) {
 //    }
 
     {
-        cv::Mat img(extracted_metadata->image_size, CV_8UC3);
+        cv::Mat img(extracted_metadata->output_image_size, CV_8UC3);
         img = cv::Scalar(255,255,255);
         // Draw foreground boxes
         for(int i=0; i<anchor_index.size(); i++) {
@@ -195,7 +195,7 @@ void plot(const string& path) {
     }
 
     {
-        cv::Mat img(extracted_metadata->image_size, CV_8UC3);
+        cv::Mat img(extracted_metadata->output_image_size, CV_8UC3);
         img = cv::Scalar(255,255,255);
         // Draw background boxes
         for(int i=0; i<anchor_index.size(); i++) {
@@ -735,11 +735,11 @@ TEST(localization, loader) {
     for(size_t i=0; i<labels_flat.size()/2; i++) {
         auto p = find(fg_idx.begin(), fg_idx.end(), i);
         if(p != fg_idx.end()) {
-            ASSERT_EQ(1, labels_flat[i]) << "at index " << i;
-            ASSERT_EQ(0, labels_flat[i + total_anchors]) << "at index " << i;
-        } else {
             ASSERT_EQ(0, labels_flat[i]) << "at index " << i;
             ASSERT_EQ(1, labels_flat[i + total_anchors]) << "at index " << i;
+        } else {
+            ASSERT_EQ(1, labels_flat[i]) << "at index " << i;
+            ASSERT_EQ(0, labels_flat[i + total_anchors]) << "at index " << i;
         }
     }
 

@@ -94,7 +94,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     float im_scale;
     tie(im_scale, im_size) = image::calculate_scale_shape(im_size, cfg.min_size, cfg.max_size);
     mp->image_scale = im_scale;
-    mp->image_size = im_size;
+    mp->output_image_size = im_size;
 
     vector<int> idx_inside = _anchor.inside_image_bounds(im_size.width, im_size.height);
     const vector<box> all_anchors = _anchor.get_all_anchors();
@@ -326,13 +326,13 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
 
     for(int i = 0; i<total_anchors * 4; i++) bbtargets[i] = 0.;
     for(int i = 0; i<total_anchors * 4; i++) bbtargets_mask[i] = 0.;
-    for(int i = 0; i<total_anchors; i++) labels_flat[i] = 0;
-    for(int i = 0; i<total_anchors; i++) labels_flat[i + total_anchors] = 1;
+    for(int i = 0; i<total_anchors; i++) labels_flat[i] = 1;
+    for(int i = 0; i<total_anchors; i++) labels_flat[i + total_anchors] = 0;
     for(int i = 0; i<total_anchors * 2; i++) labels_mask[i] = 0;
     for(int index : mp->anchor_index) {
         if(mp->labels[index] == 1) {
-            labels_flat[index + total_anchors * 0] = 1;
-            labels_flat[index + total_anchors * 1] = 0;
+            labels_flat[index + total_anchors * 0] = 0;
+            labels_flat[index + total_anchors * 1] = 1;
 
             bbtargets_mask[index + total_anchors * 0] = 1.;
             bbtargets_mask[index + total_anchors * 1] = 1.;
@@ -348,8 +348,8 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
         bbtargets[index + total_anchors * 3] = mp->bbox_targets[index].dh;
     }
 
-    im_shape[0] = mp->image_size.width;
-    im_shape[1] = mp->image_size.height;
+    im_shape[0] = mp->output_image_size.width;
+    im_shape[1] = mp->output_image_size.height;
 
     *num_gt_boxes = min(max_gt_boxes, mp->boxes().size());
     for(int i=0; i<*num_gt_boxes; i++) {
