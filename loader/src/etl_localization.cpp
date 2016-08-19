@@ -346,8 +346,8 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
         bbtargets[index + total_anchors * 3] = mp->bbox_targets[index].dh;
     }
 
-    im_shape[0] = mp->image_size.height;
-    im_shape[1] = mp->image_size.width;
+    im_shape[0] = mp->image_size.width;
+    im_shape[1] = mp->image_size.height;
 
     *num_gt_boxes = min(max_gt_boxes, mp->boxes().size());
     for(int i=0; i<*num_gt_boxes; i++) {

@@ -788,8 +788,8 @@ TEST(localization, loader) {
         }
     }
 
-    EXPECT_EQ(600, im_shape[0]) << "height";
-    EXPECT_EQ(800, im_shape[1]) << "width";
+    EXPECT_EQ(800, im_shape[0]) << "width";
+    EXPECT_EQ(600, im_shape[1]) << "height";
     EXPECT_EQ(6, num_gt_boxes[0]);
     for(int i=0; i<6; i++) {
         const boundingbox::box& box = transformed_data->boxes()[i];
