@@ -44,7 +44,7 @@ nervana::localization::config::config(nlohmann::json js, const image_var::config
     // # 3. objectness mask (ignore neutral anchors)
     // self.dev_y_labels_flat = self.be.zeros((1, self._total_anchors), dtype=np.int32)
     // self.dev_y_labels_mask = self.be.zeros((2 * self._total_anchors, 1), dtype=np.int32)
-    add_shape_type({1, total_anchors()}, "int32_t");
+    add_shape_type({1, total_anchors() * 2}, "int32_t");
     add_shape_type({total_anchors() * 2, 1}, "int32_t");
 
     // # we also consume some metadata for the proposalLayer
@@ -327,10 +327,12 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
     for(int i = 0; i<total_anchors * 4; i++) bbtargets[i] = 0.;
     for(int i = 0; i<total_anchors * 4; i++) bbtargets_mask[i] = 0.;
     for(int i = 0; i<total_anchors; i++) labels_flat[i] = 0;
+    for(int i = 0; i<total_anchors; i++) labels_flat[i + total_anchors] = 1;
     for(int i = 0; i<total_anchors * 2; i++) labels_mask[i] = 0;
     for(int index : mp->anchor_index) {
         if(mp->labels[index] == 1) {
-            labels_flat[index] = 1;
+            labels_flat[index + total_anchors * 0] = 1;
+            labels_flat[index + total_anchors * 1] = 0;
 
             bbtargets_mask[index + total_anchors * 0] = 1.;
             bbtargets_mask[index + total_anchors * 1] = 1.;
