@@ -44,7 +44,7 @@ nervana::localization::config::config(nlohmann::json js, const image_var::config
     // # 3. objectness mask (ignore neutral anchors)
     // self.dev_y_labels_flat = self.be.zeros((1, self._total_anchors), dtype=np.int32)
     // self.dev_y_labels_mask = self.be.zeros((2 * self._total_anchors, 1), dtype=np.int32)
-    add_shape_type({1, total_anchors()}, "int32_t");
+    add_shape_type({total_anchors(), 1}, "int32_t");
     add_shape_type({total_anchors() * 2, 1}, "int32_t");
 
     // # we also consume some metadata for the proposalLayer
@@ -331,23 +331,23 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
     for(int index : mp->anchor_index) {
         if(mp->labels[index] == 1) {
             labels_flat[index] = 1;
+
+            bbtargets_mask[index + total_anchors * 0] = 1.;
+            bbtargets_mask[index + total_anchors * 1] = 1.;
+            bbtargets_mask[index + total_anchors * 2] = 1.;
+            bbtargets_mask[index + total_anchors * 3] = 1.;
         }
         labels_mask[index] = 1;
         labels_mask[index+total_anchors] = 1;
 
-        bbtargets[index]                 = mp->bbox_targets[index].dx;
-        bbtargets[index+total_anchors]   = mp->bbox_targets[index].dy;
-        bbtargets[index+total_anchors*2] = mp->bbox_targets[index].dw;
-        bbtargets[index+total_anchors*3] = mp->bbox_targets[index].dh;
-
-        bbtargets_mask[index]                 = 1.;
-        bbtargets_mask[index+total_anchors]   = 1.;
-        bbtargets_mask[index+total_anchors*2] = 1.;
-        bbtargets_mask[index+total_anchors*3] = 1.;
+        bbtargets[index + total_anchors * 0] = mp->bbox_targets[index].dx;
+        bbtargets[index + total_anchors * 1] = mp->bbox_targets[index].dy;
+        bbtargets[index + total_anchors * 2] = mp->bbox_targets[index].dw;
+        bbtargets[index + total_anchors * 3] = mp->bbox_targets[index].dh;
     }
 
-    im_shape[0] = mp->height();
-    im_shape[1] = mp->width();
+    im_shape[0] = mp->image_size.height;
+    im_shape[1] = mp->image_size.width;
 
     *num_gt_boxes = min(max_gt_boxes, mp->boxes().size());
     for(int i=0; i<*num_gt_boxes; i++) {
