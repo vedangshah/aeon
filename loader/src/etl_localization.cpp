@@ -44,7 +44,7 @@ nervana::localization::config::config(nlohmann::json js, const image_var::config
     // # 3. objectness mask (ignore neutral anchors)
     // self.dev_y_labels_flat = self.be.zeros((1, self._total_anchors), dtype=np.int32)
     // self.dev_y_labels_mask = self.be.zeros((2 * self._total_anchors, 1), dtype=np.int32)
-    add_shape_type({total_anchors(), 1}, "int32_t");
+    add_shape_type({1, total_anchors()}, "int32_t");
     add_shape_type({total_anchors() * 2, 1}, "int32_t");
 
     // # we also consume some metadata for the proposalLayer
